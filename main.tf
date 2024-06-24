@@ -102,10 +102,10 @@ resource "vsphere_virtual_machine" "vm" {
 }
 
 # Outputs for useful information
-output "vm_name" {
-  value = vsphere_virtual_machine.vm.name
+output "vm_ips" {
+  value = { for k, v in var.vms : k => v.vm_ip }
 }
 
-output "vm_ip_address" {
-  value = var.vms["terraform_test"]["vm_ip"]
+output "vm_names" {
+  value = { for k, v in var.vms : k => v.name }
 }
