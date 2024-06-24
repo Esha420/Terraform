@@ -18,7 +18,7 @@ disksize               = "20"
 vms = {
    "rocky_test_1"= {
     name                = "VM-1"
-    vm_ip               = "172.25.204.50"
+    vm_ip               = "172.25.204.49"
   }
    "rocky_test_2"= {
     name                = "VM-2"
