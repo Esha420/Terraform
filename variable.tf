@@ -105,7 +105,7 @@ variable "vminfo" {
     memory = string
   }))
   default = {
-    "rocky_test_1" = {
+    "terraform_test" = {
       vm     = "terraform_test"
       cpu    = "2"
       memory = "1024"
