@@ -40,7 +40,7 @@ variable "datastore" {
 variable "template" {
   description = "Template to use for the VM"
   type        = string
-  default     = "CMS Backend"
+  default     = "CentOs"
 }
 
 variable "jumphost_ip" {
