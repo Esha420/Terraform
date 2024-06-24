@@ -22,7 +22,7 @@ variable "datacenter" {
 variable "cluster" {
   description = "Cluster name"
   type        = string
-  default     = "Application Server A"
+  default     = "Database Server B"
 }
 
 variable "network" {
