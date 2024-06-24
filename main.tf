@@ -38,7 +38,7 @@ resource "vsphere_virtual_machine" "vm" {
  
   disk {
     label            = "disk0"
-    size             = 20
+    size             = 40
     eagerly_scrub    = false
     thin_provisioned = true
   }
