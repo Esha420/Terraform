@@ -1,19 +1,16 @@
 variable "vCenter_user" {
   description = "Username to connect to vCenter Server"
   type        = string
-  
 }
 
 variable "vCenter_password" {
   description = "Password to connect to vCenter Server"
   type        = string
- 
 }
 
 variable "vCenter_server" {
   description = "IP or DNS name to connect to vCenter server"
   type        = string
-  
 }
 
 variable "datacenter" {
@@ -29,33 +26,36 @@ variable "cluster" {
 }
 
 variable "network" {
-  description = "IP or DNS name to connect to vCenter server"
+  description = "Network name for the VM"
   type        = string
   default     = "VM Network"
 }
 
 variable "datastore" {
-  description = "IP or DNS name to connect to vCenter server"
+  description = "Datastore name for the VM"
   type        = string
   default     = "Database-Server-B-Datastore"
 }
 
 variable "template" {
-  description = "IP or DNS name to connect to vCenter server"
+  description = "Template to use for the VM"
   type        = string
   default     = "CMS Backend"
 }
 
 variable "jumphost_ip" {
-  description = "jumphost_ip"
+  description = "Jumphost IP"
+  type        = string
 }
 
 variable "jumphost_subnet" {
-  description = "jumphost_subnet"
+  description = "Jumphost subnet"
+  type        = string
 }
 
 variable "jumphost_gateway" {
-  description = "jumphost_gateway"
+  description = "Jumphost gateway"
+  type        = string
 }
 
 variable "disksize" {
@@ -64,17 +64,24 @@ variable "disksize" {
   default     = "20"
 }
 
+variable "jumphost_user" {
+  description = "Jumphost username"
+  type        = string
+}
 
-variable "jumphost_user" { }
-variable "jumphost_password" {}
+variable "jumphost_password" {
+  description = "Jumphost password"
+  type        = string
+}
 
 variable "dns_server_list" { 
   type = list(string)
-  default = [ ]
+  default = []
 }
+
 variable "dns_suffix_list" { 
   type = list(string)
-  default = [ ]
+  default = []
 }
 
 variable "vms" {
@@ -89,8 +96,8 @@ variable "vms" {
       vm_ip = "172.25.204.49"
     }
   }
-  
 }
+
 variable "vminfo" {
   type = map(object({
     vm     = string
@@ -98,12 +105,10 @@ variable "vminfo" {
     memory = string
   }))
   default = {
-    "dev" = {
+    "rocky_test_1" = {
       vm     = "terraform_test"
       cpu    = "2"
       memory = "1024"
     }
   }
 }
-
-
