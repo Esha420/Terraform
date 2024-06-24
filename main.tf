@@ -34,7 +34,7 @@ resource "vsphere_virtual_machine" "vm" {
   datastore_id     = data.vsphere_datastore.datastore.id
   num_cpus         = 2
   memory           = 4096
-  guest_id         = "ubuntu64Guest"
+  guest_id         = "CentOS64Guest"
   
   network_interface {
     network_id = data.vsphere_network.network.id
