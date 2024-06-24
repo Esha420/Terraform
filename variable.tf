@@ -43,7 +43,7 @@ variable "datastore" {
 variable "template" {
   description = "IP or DNS name to connect to vCenter server"
   type        = string
-  default     = "Ubuntu"
+  default     = "CMS Backend"
 }
 
 variable "jumphost_ip" {
@@ -89,4 +89,21 @@ variable "vms" {
       vm_ip = "172.25.204.49"
     }
   }
+  
 }
+variable "vminfo" {
+  type = map(object({
+    vm     = string
+    cpu    = string
+    memory = string
+  }))
+  default = {
+    "dev" = {
+      vm     = "terraform_test"
+      cpu    = "2"
+      memory = "1024"
+    }
+  }
+}
+
+
