@@ -23,7 +23,7 @@ data "vsphere_virtual_machine" "template" {
 }
 
 resource "vsphere_virtual_machine" "vm" {
-  name             = "terraform-vm"
+  name             = "terraform_test"
   resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
  
@@ -48,16 +48,16 @@ resource "vsphere_virtual_machine" "vm" {
  
     customize {
       linux_options {
-        host_name = "terraform-vm"
+        host_name = "terraform_test"
         domain    = "local"
       }
  
       network_interface {
-        ipv4_address = "10.0.0.10"
-        ipv4_netmask = 24
+        ipv4_address = var.jumphost_ip
+        ipv4_netmask = var.jumphost_subnet
       }
  
-      ipv4_gateway = "10.0.0.1"
+      ipv4_gateway = var.jumphost_gateway
     }
   }
 }
@@ -68,5 +68,5 @@ output "vm_name" {
 }
 
 output "vm_ip_address" {
-  value = var.vms["rocky_test_1"]["vm_ip"]
+  value = var.vms["terraform_test"]["vm_ip"]
 }

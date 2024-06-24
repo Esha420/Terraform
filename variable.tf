@@ -92,7 +92,7 @@ variable "vms" {
   
   default = {
     rocky_test_1 = {
-      name  = "rocky-1"
+      name  = "terraform_test"
       vm_ip = "172.25.204.49"
     }
   }
