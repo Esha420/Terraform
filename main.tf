@@ -29,7 +29,7 @@ resource "vsphere_virtual_machine" "vm" {
  
   num_cpus = 2
   memory   = 4096
-  guest_id = "ubuntu64Guest"
+  guest_id = "centos7_64Guest"
  
   network_interface {
     network_id = data.vsphere_network.network.id
