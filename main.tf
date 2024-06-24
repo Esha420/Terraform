@@ -61,45 +61,95 @@ data "vsphere_virtual_machine" "template" {
 #     }
 #   }
 # }
+
 resource "vsphere_virtual_machine" "vm" {
-  for_each         = var.vms
-  name             = each.value.name
+  count            = length(var.vms)
+  name             = var.vms[values(var.vms)[count.index].name].name
   resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
-  num_cpus         = each.value.cpu
-  memory           = each.value.memory
-  guest_id         = each.value.guest_id
-
+ 
+  num_cpus = var.vms[values(var.vms)[count.index].name].cpu
+  memory   = var.vms[values(var.vms)[count.index].name].memory
+  guest_id = var.vms[values(var.vms)[count.index].name].guest_id
+ 
   network_interface {
-    network_id   = data.vsphere_network.network.id
+    network_id = data.vsphere_network.network.id
     adapter_type = "vmxnet3"
   }
-
+ 
   disk {
     label            = "disk0"
-    size             = each.value.disksize
+    size             = var.vms[values(var.vms)[count.index].name].disksize
     eagerly_scrub    = false
     thin_provisioned = true
   }
-
+ 
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
-
+ 
     customize {
       linux_options {
-        host_name = each.value.name
+        host_name = var.vms[values(var.vms)[count.index].name].name
         domain    = "local"
       }
-
+ 
       network_interface {
-        ipv4_address = each.value.vm_ip
-        ipv4_netmask = each.value.ipv4_netmask
+        ipv4_address = var.vms[values(var.vms)[count.index].name].vm_ip
+        ipv4_netmask = var.vms[values(var.vms)[count.index].name].ipv4_netmask
       }
+ 
+      ipv4_gateway = var.vms[values(var.vms)[count.index].name].ipv4_gateway
 
-      ipv4_gateway = each.value.ipv4_gateway
+     // Set the username and password
+      user {
+        name = var.vms[values(var.vms)[count.index].name].username
+        password = var.vms[values(var.vms)[count.index].name].password
+      }
     }
   }
 }
+
+
+
+# resource "vsphere_virtual_machine" "vm" {
+#   for_each         = var.vms
+#   name             = each.value.name
+#   resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id
+#   datastore_id     = data.vsphere_datastore.datastore.id
+#   num_cpus         = each.value.cpu
+#   memory           = each.value.memory
+#   guest_id         = each.value.guest_id
+
+#   network_interface {
+#     network_id   = data.vsphere_network.network.id
+#     adapter_type = "vmxnet3"
+#   }
+
+#   disk {
+#     label            = "disk0"
+#     size             = each.value.disksize
+#     eagerly_scrub    = false
+#     thin_provisioned = true
+#   }
+
+#   clone {
+#     template_uuid = data.vsphere_virtual_machine.template.id
+
+#     customize {
+#       linux_options {
+#         host_name = each.value.name
+#         domain    = "local"
+#       }
+
+#       network_interface {
+#         ipv4_address = each.value.vm_ip
+#         ipv4_netmask = each.value.ipv4_netmask
+#       }
+
+#       ipv4_gateway = each.value.ipv4_gateway
+#     }
+#   }
+# }
 
 # Outputs for useful information
 output "vm_ips" {

@@ -109,6 +109,8 @@ variable "vms" {
     guest_id   = string
     ipv4_netmask = number
     ipv4_gateway = string
+    username    = string
+    password    = string
   }))
   default = {
     rocky_test_1 = {
@@ -120,6 +122,8 @@ variable "vms" {
       guest_id   = "centos7_64Guest"
       ipv4_netmask = 24
       ipv4_gateway = "172.25.204.1"
+      username    = "kube-spray"
+      password    = "12345"
     }
     rocky_test_2 = {
       name       = "VM-2"
@@ -130,6 +134,8 @@ variable "vms" {
       guest_id   = "centos7_64Guest"
       ipv4_netmask = 24
       ipv4_gateway = "172.25.204.1"
+      username    = "kube-spray"
+      password    = "12345"
     }
   }
 }
