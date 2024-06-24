@@ -48,7 +48,7 @@ resource "vsphere_virtual_machine" "vm" {
  
     customize {
       linux_options {
-        host_name = "terraform_test"
+        host_name = "terraform"
         domain    = "local"
       }
  
