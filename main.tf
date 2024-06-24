@@ -27,6 +27,22 @@ data "vsphere_network" "network" {
   datacenter_id = data.vsphere_datacenter.datacenter.id
 }
 
+output "datacenter_id" {
+  value = data.vsphere_datacenter.datacenter.id
+}
+
+output "datastore_id" {
+  value = data.vsphere_datastore.datastore.id
+}
+
+output "cluster_id" {
+  value = data.vsphere_compute_cluster.cluster.resource_pool_id
+}
+
+output "network_id" {
+  value = data.vsphere_network.network.id
+}
+
 resource "vsphere_virtual_machine" "vm" {
   for_each         = var.vms
   name             = each.value.name
