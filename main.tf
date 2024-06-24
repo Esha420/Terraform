@@ -17,32 +17,49 @@ data "vsphere_network" "network" {
   datacenter_id = data.vsphere_datacenter.dc.id
 }
 
+data "vsphere_virtual_machine" "template" {
+  name          = var.template
+  datacenter_id = data.vsphere_datacenter.datacenter.id
+}
+
 resource "vsphere_virtual_machine" "vm" {
-  name             = var.vms["rocky_test_1"]["name"]
+  name             = "terraform-vm"
   resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
-  num_cpus         = 2
-  memory           = 4096  # in MB (4 GB)
-  guest_id         = "centos64Guest"  # Adjust guest_id based on your operating system
-  
+ 
+  num_cpus = 2
+  memory   = 4096
+  guest_id = "ubuntu64Guest"
+ 
   network_interface {
-    network_id   = data.vsphere_network.network.id
+    network_id = data.vsphere_network.network.id
     adapter_type = "vmxnet3"
   }
-
+ 
   disk {
     label            = "disk0"
-    size             = var.disksize  # Convert to GB
+    size             = 20
+    eagerly_scrub    = false
     thin_provisioned = true
   }
-
-  cdrom {
-    datastore_id = data.vsphere_datastore.datastore.id
-    path         = "/vmfs/volumes/${var.datastore}/ISO/CentOS-7-x86_64-DVD-2009.iso"  # Adjust path as per your ISO
+ 
+  clone {
+    template_uuid = data.vsphere_virtual_machine.template.id
+ 
+    customize {
+      linux_options {
+        host_name = "terraform-vm"
+        domain    = "local"
+      }
+ 
+      network_interface {
+        ipv4_address = "10.0.0.10"
+        ipv4_netmask = 24
+      }
+ 
+      ipv4_gateway = "10.0.0.1"
+    }
   }
-
-  # Customize further properties as needed (e.g., CPU limits, custom scripts, etc.)
-
 }
 
 # Outputs for useful information
