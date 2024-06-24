@@ -84,16 +84,52 @@ variable "dns_suffix_list" {
   default = []
 }
 
+# variable "vms" {
+#   type = map(object({
+#     name  = string
+#     vm_ip = string
+#   }))
+  
+#   default = {
+#     rocky_test_1 = {
+#       name  = "terraform_test"
+#       vm_ip = "172.25.204.50"
+#     }
+#   }
+# }
+
+
 variable "vms" {
   type = map(object({
-    name  = string
-    vm_ip = string
+    name       = string
+    vm_ip      = string
+    cpu        = number
+    memory     = number
+    disksize   = number
+    guest_id   = string
+    ipv4_netmask = number
+    ipv4_gateway = string
   }))
-  
   default = {
     rocky_test_1 = {
-      name  = "terraform_test"
-      vm_ip = "172.25.204.50"
+      name       = "VM-1"
+      vm_ip      = "172.25.204.49"
+      cpu        = 2
+      memory     = 1024
+      disksize   = 40
+      guest_id   = "centos7_64Guest"
+      ipv4_netmask = 24
+      ipv4_gateway = "172.25.204.1"
+    }
+    rocky_test_2 = {
+      name       = "VM-2"
+      vm_ip      = "172.25.204.50"
+      cpu        = 2
+      memory     = 1024
+      disksize   = 40
+      guest_id   = "centos7_64Guest"
+      ipv4_netmask = 24
+      ipv4_gateway = "172.25.204.1"
     }
   }
 }
@@ -105,9 +141,14 @@ variable "vminfo" {
     memory = string
   }))
   default = {
-    "terraform_test" = {
-      vm     = "terraform_test"
+    "rocky_test_1" = {
+      vm     = "VM-1"
       cpu    = "2"
+      memory = "1024"
+    }
+    "rocky_test_2" = {
+      vm = "VM-2"
+      cpu = "2"
       memory = "1024"
     }
   }

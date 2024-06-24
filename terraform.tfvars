@@ -16,8 +16,12 @@ dns_suffix_list       = [ "tudc.com" ]
 disksize               = "20"
 
 vms = {
-   "terraform_test"= {
-    name                = "terraform_test"
+   "rocky_test_1"= {
+    name                = "VM-1"
+    vm_ip               = "172.25.204.50"
+  }
+   "rocky_test_2"= {
+    name                = "VM-2"
     vm_ip               = "172.25.204.50"
   }
 }
