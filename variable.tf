@@ -93,7 +93,7 @@ variable "vms" {
   default = {
     rocky_test_1 = {
       name  = "terraform_test"
-      vm_ip = "172.25.204.49"
+      vm_ip = "172.25.204.50"
     }
   }
 }
