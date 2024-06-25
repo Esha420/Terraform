@@ -62,6 +62,7 @@ data "vsphere_virtual_machine" "template" {
 #   }
 # }
 
+
 resource "vsphere_virtual_machine" "vm" {
   count            = length(var.vms)
   name             = values(var.vms)[count.index].name
@@ -102,6 +103,19 @@ resource "vsphere_virtual_machine" "vm" {
 
       dns_server_list = var.dns_server_list
       dns_suffix_list = var.dns_suffix_list
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo -e '${var.vms[count.index].password}\n${var.vms[count.index].password}' | passwd ${var.vms[count.index].username}"
+    ]
+
+    connection {
+      type     = "ssh"
+      user     = "root"
+      password = "12345"  # Replace with the actual root password or another initial password
+      host     = values(var.vms)[count.index].vm_ip
     }
   }
 }
