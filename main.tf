@@ -120,6 +120,7 @@ resource "vsphere_virtual_machine" "vm" {
   }
 }
 
+
 output "vm_ips" {
   value = { for k, v in var.vms : k => v.vm_ip }
 }
