@@ -64,53 +64,55 @@ data "vsphere_virtual_machine" "template" {
 
 resource "vsphere_virtual_machine" "vm" {
   count            = length(var.vms)
-  name             = var.vms[values(var.vms)[count.index].name].name
+  name             = values(var.vms)[count.index].name
   resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
- 
-  num_cpus = var.vms[values(var.vms)[count.index].name].cpu
-  memory   = var.vms[values(var.vms)[count.index].name].memory
-  guest_id = var.vms[values(var.vms)[count.index].name].guest_id
- 
+
+  num_cpus = values(var.vms)[count.index].cpu
+  memory   = values(var.vms)[count.index].memory
+  guest_id = values(var.vms)[count.index].guest_id
+
   network_interface {
-    network_id = data.vsphere_network.network.id
+    network_id   = data.vsphere_network.network.id
     adapter_type = "vmxnet3"
   }
- 
+
   disk {
     label            = "disk0"
-    size             = var.vms[values(var.vms)[count.index].name].disksize
+    size             = values(var.vms)[count.index].disksize
     eagerly_scrub    = false
     thin_provisioned = true
   }
- 
+
   clone {
     template_uuid = data.vsphere_virtual_machine.template.id
- 
+
     customize {
       linux_options {
-        host_name = var.vms[values(var.vms)[count.index].name].name
+        host_name = values(var.vms)[count.index].name
         domain    = "local"
       }
- 
-      network_interface {
-        ipv4_address = var.vms[values(var.vms)[count.index].name].vm_ip
-        ipv4_netmask = var.vms[values(var.vms)[count.index].name].ipv4_netmask
-      }
- 
-      ipv4_gateway = var.vms[values(var.vms)[count.index].name].ipv4_gateway
 
-     // Set the username and password
-      user {
-        name = var.vms[values(var.vms)[count.index].name].username
-        password = var.vms[values(var.vms)[count.index].name].password
+      network_interface {
+        ipv4_address = values(var.vms)[count.index].vm_ip
+        ipv4_netmask = values(var.vms)[count.index].ipv4_netmask
       }
+
+      ipv4_gateway = values(var.vms)[count.index].ipv4_gateway
+
+      dns_server_list = var.dns_server_list
+      dns_suffix_list = var.dns_suffix_list
     }
   }
 }
 
+output "vm_ips" {
+  value = { for k, v in var.vms : k => v.vm_ip }
+}
 
-
+output "vm_names" {
+  value = { for k, v in var.vms : k => v.name }
+}
 # resource "vsphere_virtual_machine" "vm" {
 #   for_each         = var.vms
 #   name             = each.value.name
@@ -152,10 +154,10 @@ resource "vsphere_virtual_machine" "vm" {
 # }
 
 # Outputs for useful information
-output "vm_ips" {
-  value = { for k, v in var.vms : k => v.vm_ip }
-}
+# output "vm_ips" {
+#   value = { for k, v in var.vms : k => v.vm_ip }
+# }
 
-output "vm_names" {
-  value = { for k, v in var.vms : k => v.name }
-}
+# output "vm_names" {
+#   value = { for k, v in var.vms : k => v.name }
+# }
