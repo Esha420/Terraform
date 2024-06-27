@@ -61,7 +61,7 @@ variable "jumphost_gateway" {
 variable "disksize" {
   description = "Size of the disk for the VM. Leave empty to use the size from the template."
   type        = string
-  default     = "20"
+  default     = "80"
 }
 
 variable "jumphost_user" {
@@ -118,7 +118,7 @@ variable "vms" {
       vm_ip      = "172.25.204.49"
       cpu        = 2
       memory     = 1024
-      disksize   = 40
+      disksize   = 80
       guest_id   = "centos7_64Guest"
       ipv4_netmask = 24
       ipv4_gateway = "172.25.204.1"
@@ -130,7 +130,7 @@ variable "vms" {
       vm_ip      = "172.25.204.50"
       cpu        = 2
       memory     = 1024
-      disksize   = 40
+      disksize   = 80
       guest_id   = "centos7_64Guest"
       ipv4_netmask = 24
       ipv4_gateway = "172.25.204.1"

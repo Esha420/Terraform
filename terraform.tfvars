@@ -13,7 +13,7 @@ jumphost_password     = "TU@123"
 dns_server_list       = [ "10.11.10.69" ]
 dns_suffix_list       = [ "tudc.com" ]
 
-disksize               = "20"
+disksize               = "80"
 
 vms = {
    "rocky_test_1"= {
@@ -21,7 +21,7 @@ vms = {
     vm_ip               = "172.25.204.49"
     cpu        = 2
     memory     = 1024
-    disksize   = 40
+    disksize   = 80
     guest_id   = "centos7_64Guest"
     ipv4_netmask = 24
     ipv4_gateway = "172.25.204.1"
@@ -33,7 +33,7 @@ vms = {
     vm_ip               = "172.25.204.50"
     cpu        = 2
     memory     = 1024
-    disksize   = 40
+    disksize   = 80
     guest_id   = "centos7_64Guest"
     ipv4_netmask = 24
     ipv4_gateway = "172.25.204.1"

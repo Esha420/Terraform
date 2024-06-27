@@ -81,8 +81,8 @@ resource "vsphere_virtual_machine" "vm" {
   disk {
     label            = "disk0"
     size             = values(var.vms)[count.index].disksize
-    eagerly_scrub    = false
-    thin_provisioned = true
+    eagerly_scrub    = true
+    thin_provisioned = false
   }
 
   clone {
@@ -128,6 +128,8 @@ output "vm_ips" {
 output "vm_names" {
   value = { for k, v in var.vms : k => v.name }
 }
+
+
 # resource "vsphere_virtual_machine" "vm" {
 #   for_each         = var.vms
 #   name             = each.value.name
