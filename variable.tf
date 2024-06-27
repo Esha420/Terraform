@@ -37,12 +37,6 @@ variable "datastore" {
   default     = "Database-Server-B-Datastore"
 }
 
-variable "template" {
-  description = "Template to use for the VM"
-  type        = string
-  default     = "CentOs"
-}
-
 variable "jumphost_ip" {
   description = "Jumphost IP"
   type        = string
