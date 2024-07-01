@@ -1,3 +1,4 @@
+
 variable "vCenter_user" {
   description = "Username to connect to vCenter Server"
   type        = string
@@ -34,13 +35,7 @@ variable "network" {
 variable "datastore" {
   description = "Datastore name for the VM"
   type        = string
-  default     = "Database-Server-B-Datastore"
-}
-
-variable "template" {
-  description = "Template to use for the VM"
-  type        = string
-  default     = "CentOs"
+  default     = "TrueNas"
 }
 
 variable "jumphost_ip" {
@@ -61,7 +56,7 @@ variable "jumphost_gateway" {
 variable "disksize" {
   description = "Size of the disk for the VM. Leave empty to use the size from the template."
   type        = string
-  default     = "20"
+  default     = "40"
 }
 
 variable "jumphost_user" {
@@ -74,30 +69,15 @@ variable "jumphost_password" {
   type        = string
 }
 
-variable "dns_server_list" { 
+variable "dns_server_list" {
   type = list(string)
   default = []
 }
 
-variable "dns_suffix_list" { 
+variable "dns_suffix_list" {
   type = list(string)
   default = []
 }
-
-# variable "vms" {
-#   type = map(object({
-#     name  = string
-#     vm_ip = string
-#   }))
-  
-#   default = {
-#     rocky_test_1 = {
-#       name  = "terraform_test"
-#       vm_ip = "172.25.204.50"
-#     }
-#   }
-# }
-
 
 variable "vms" {
   type = map(object({
@@ -119,7 +99,7 @@ variable "vms" {
       cpu        = 2
       memory     = 1024
       disksize   = 40
-      guest_id   = "centos7_64Guest"
+      guest_id   = "ubuntu64Guest"
       ipv4_netmask = 24
       ipv4_gateway = "172.25.204.1"
       username    = "kube-spray"
@@ -131,7 +111,7 @@ variable "vms" {
       cpu        = 2
       memory     = 1024
       disksize   = 40
-      guest_id   = "centos7_64Guest"
+      guest_id   = "ubuntu64Guest"
       ipv4_netmask = 24
       ipv4_gateway = "172.25.204.1"
       username    = "kube-spray"
