@@ -16,9 +16,9 @@ dns_suffix_list       = [ "tudc.com" ]
 disksize               = "20"
 
 vms = {
-   "VM_1"= {
-    name       = "VM-01"
-    vm_ip      = "172.25.204.49"
+   "rocky_test_1"= {
+    name                = "VM-1"
+    vm_ip               = "172.25.204.49"
     cpu        = 2
     memory     = 1024
     disksize   = 40
@@ -28,8 +28,8 @@ vms = {
     username    = "kube-spray"
     password    = "12345"
   }
-   "VM_2"= {
-    name                = "VM-02"
+   "rocky_test_2"= {
+    name                = "VM-2"
     vm_ip               = "172.25.204.50"
     cpu        = 2
     memory     = 1024
