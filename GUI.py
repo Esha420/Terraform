@@ -379,7 +379,7 @@ variable "vminfo" {{
     def generate_main_tf(self):
         main_tf_content = f"""
 data "vsphere_datacenter" "dc" {{
-  name = "var.datacenter"
+  name = var.datacenter
 }}
 
 data "vsphere_datastore" "datastore" {{
