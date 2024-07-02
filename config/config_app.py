@@ -1,96 +1,94 @@
 import tkinter as tk
+import subprocess
 from tkinter import ttk, messagebox
+from config.vm_entry import VMEntry
+from config.utils import create_labeled_entry
+from config.gui_utils import create_scrollable_frame
 
 class ConfigApp:
     def __init__(self, root):
         self.root = root
         root.title("Configuration Input")
 
-        # Create a canvas and a vertical scrollbar for scrolling
-        canvas = tk.Canvas(root)
-        scrollbar = ttk.Scrollbar(root, orient="vertical", command=canvas.yview)
-        scrollable_frame = ttk.Frame(canvas)
+        # Create a scrollable frame using utility function
+        scrollable_frame = create_scrollable_frame(root)
 
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
-            )
-        )
-
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-
-        main_frame = ttk.Frame(scrollable_frame)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Initialize lists to keep track of VM entries and their instances
+        self.vm_entries = []
+        self.vm_entry_instances = []
 
         # Frame for vCenter
-        self.vcenter_frame = ttk.LabelFrame(main_frame, text="vCenter Configuration")
-        self.vcenter_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        self.vcenter_frame = ttk.LabelFrame(scrollable_frame, text="vCenter Configuration")
+        self.vcenter_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        self.vcenter_user = self.create_labeled_entry(self.vcenter_frame, "vCenter User", 0)
-        self.vcenter_password = self.create_labeled_entry(self.vcenter_frame, "vCenter Password", 1, show="*")
-        self.vcenter_server = self.create_labeled_entry(self.vcenter_frame, "vCenter Server", 2, default="172.25.204.15")
+        self.vcenter_user = create_labeled_entry(self.vcenter_frame, "vCenter User", 0)
+        self.vcenter_password = create_labeled_entry(self.vcenter_frame, "vCenter Password", 1, show="*")
+        self.vcenter_server = create_labeled_entry(self.vcenter_frame, "vCenter Server", 2)
 
         # Frame for Jumphost
-        self.jumphost_frame = ttk.LabelFrame(main_frame, text="Jumphost Configuration")
-        self.jumphost_frame.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+        self.jumphost_frame = ttk.LabelFrame(scrollable_frame, text="Jumphost Configuration")
+        self.jumphost_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        self.jumphost_ip = self.create_labeled_entry(self.jumphost_frame, "Jumphost IP", 0, default="172.25.204.50")
-        self.jumphost_subnet = self.create_labeled_entry(self.jumphost_frame, "Jumphost Subnet", 1, default="24")
-        self.jumphost_gateway = self.create_labeled_entry(self.jumphost_frame, "Jumphost Gateway", 2, default="172.25.204.1")
-        self.jumphost_user = self.create_labeled_entry(self.jumphost_frame, "Jumphost User", 3)
-        self.jumphost_password = self.create_labeled_entry(self.jumphost_frame, "Jumphost Password", 4, show="*")
+        self.jumphost_ip = create_labeled_entry(self.jumphost_frame, "Jumphost IP", 0)
+        self.jumphost_subnet = create_labeled_entry(self.jumphost_frame, "Jumphost Subnet", 1)
+        self.jumphost_gateway = create_labeled_entry(self.jumphost_frame, "Jumphost Gateway", 2)
+        self.jumphost_user = create_labeled_entry(self.jumphost_frame, "Jumphost User", 3)
+        self.jumphost_password = create_labeled_entry(self.jumphost_frame, "Jumphost Password", 4, show="*")
 
         # Frame for DNS
-        self.dns_frame = ttk.LabelFrame(main_frame, text="DNS Configuration")
-        self.dns_frame.grid(row=2, column=0, padx=10, pady=10, sticky="ew")
+        self.dns_frame = ttk.LabelFrame(scrollable_frame, text="DNS Configuration")
+        self.dns_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        self.dns_server_list = self.create_labeled_entry(self.dns_frame, "DNS Server List (comma-separated)", 0, default="10.11.10.69")
-        self.dns_suffix_list = self.create_labeled_entry(self.dns_frame, "DNS Suffix List (comma-separated)", 1)
+        self.dns_server_list = create_labeled_entry(self.dns_frame, "DNS Server List (comma-separated)", 0)
+        self.dns_suffix_list = create_labeled_entry(self.dns_frame, "DNS Suffix List (comma-separated)", 1)
 
         # Frame for VMs
-        self.vms_frame = ttk.LabelFrame(main_frame, text="VMs Configuration")
-        self.vms_frame.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
+        self.vms_frame = ttk.LabelFrame(scrollable_frame, text="VMs Configuration")
+        self.vms_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-        self.vm1_name = self.create_labeled_entry(self.vms_frame, "VM 1 Name", 0, default="VM-1")
-        self.vm1_cpu = self.create_labeled_entry(self.vms_frame, "VM 1 CPU", 2, default="2")
-        self.vm1_memory = self.create_labeled_entry(self.vms_frame, "VM 1 Memory (MB)", 3, default="1024")
-        self.vm1_disksize = self.create_labeled_entry(self.vms_frame, "VM 1 Disk Size (GB)", 4, default="40")
-        self.vm1_guest_id = self.create_labeled_entry(self.vms_frame, "VM 1 Guest ID", 5, default="centos7_64Guest")
+        # Button to add new VM entry
+        add_vm_button = ttk.Button(self.vms_frame, text="Add VM", command=self.add_vm_entry)
+        add_vm_button.grid(row=0, column=0, padx=5, pady=5)
 
-        self.vm2_name = self.create_labeled_entry(self.vms_frame, "VM 2 Name", 10, default="VM-2")
-        self.vm2_cpu = self.create_labeled_entry(self.vms_frame, "VM 2 CPU", 12, default="2")
-        self.vm2_memory = self.create_labeled_entry(self.vms_frame, "VM 2 Memory (MB)", 13, default="1024")
-        self.vm2_disksize = self.create_labeled_entry(self.vms_frame, "VM 2 Disk Size (GB)", 14, default="40")
-        self.vm2_guest_id = self.create_labeled_entry(self.vms_frame, "VM 2 Guest ID", 15, default="centos7_64Guest")
-
-        # Frame for actions
-        self.action_frame = ttk.Frame(main_frame)
-        self.action_frame.grid(row=4, column=0, padx=10, pady=10, sticky="ew")
+        # Actions frame
+        self.action_frame = ttk.Frame(scrollable_frame)
+        self.action_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
         self.save_button = ttk.Button(self.action_frame, text="Generate Terraform Config", command=self.generate_terraform_config)
-        self.save_button.pack(side="left", padx=5)
+        self.save_button.grid(row=0, column=0, padx=5, pady=5)
 
-        self.next_button = ttk.Button(self.action_frame, text="Next", command=self.open_additional_window)
-        self.next_button.pack(side="left", padx=5)
+        self.next_button = ttk.Button(self.action_frame, text="Additional Configuration", command=self.open_additional_window)
+        self.next_button.grid(row=0, column=1, padx=5, pady=5)
 
-        self.clear_button = ttk.Button(self.action_frame, text="Clear", command=self.clear_entries)
-        self.clear_button.pack(side="left", padx=5)
+        self.iso_button = ttk.Button(self.action_frame, text="Main.tf file", command=self.open_iso_path_window)
+        self.iso_button.grid(row=0, column=2, padx=5, pady=5)
+
+        self.terraform_button = ttk.Button(self.action_frame, text="Run Terraform Files", command=self.open_terraform_window)
+        self.terraform_button.grid(row=0, column=3, padx=5, pady=5)        
 
         self.quit_button = ttk.Button(self.action_frame, text="Quit", command=root.quit)
-        self.quit_button.pack(side="right", padx=5)
+        self.quit_button.grid(row=0, column=4, padx=5, pady=5)
 
-    def create_labeled_entry(self, parent, label_text, row, default="", show=None):
-        label = ttk.Label(parent, text=label_text)
-        label.grid(row=row, column=0, padx=5, pady=5, sticky="w")
-        entry = ttk.Entry(parent, show=show)
-        entry.grid(row=row, column=1, padx=5, pady=5, sticky="ew")
-        entry.insert(0, default)
-        return entry
+    def add_vm_entry(self):
+        new_entry_number = len(self.vm_entries) + 1
+        vm_entry = VMEntry(self.vms_frame, new_entry_number, self.delete_vm_entry)
+        vm_entry.grid(row=new_entry_number, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
+        self.vm_entries.append(vm_entry)
+        self.vm_entry_instances.append(vm_entry)
+
+    def delete_vm_entry(self, entry_number):
+        if entry_number <= len(self.vm_entries):
+            vm_entry = self.vm_entries[entry_number - 1]
+            vm_entry.destroy()
+            self.vm_entries.remove(vm_entry)
+            self.vm_entry_instances.remove(vm_entry)
+            self.reposition_vm_entries()
+        else:
+            messagebox.showerror("Error", f"VM entry {entry_number} does not exist.")
+
+    def reposition_vm_entries(self):
+        for index, entry in enumerate(self.vm_entries):
+            entry.reposition(index + 1)
 
     def generate_terraform_config(self):
         terraform_config = ""
@@ -121,25 +119,17 @@ dns_suffix_list       = [ "{self.dns_suffix_list.get()}" ]
         terraform_config += dns_config
 
         # Generate VMs configuration
-        vms_config = f"""
-
-vms = {{
-   "rocky_test_1"= {{
-    name                = "{self.vm1_name.get()}"
-    cpu                 = {self.vm1_cpu.get()}
-    memory              = {self.vm1_memory.get()}
-    disksize            = {self.vm1_disksize.get()}
-    guest_id            = "{self.vm1_guest_id.get()}"
-  }}
-   "rocky_test_2"= {{
-    name                = "{self.vm2_name.get()}"
-    cpu                 = {self.vm2_cpu.get()}
-    memory              = {self.vm2_memory.get()}
-    disksize            = {self.vm2_disksize.get()}
-    guest_id            = "{self.vm2_guest_id.get()}"
-  }}
-}}
-"""
+        vms_config = "\nvms = {\n"
+        for i, vm_entry in enumerate(self.vm_entries):
+            vm_data = vm_entry.get_vm_data()
+            vms_config += f'  "VM_{i+1}" = {{\n'
+            vms_config += f'    name        = "{vm_data["name"]}"\n'
+            vms_config += f'    cpu         = {vm_data["cpu"]}\n'
+            vms_config += f'    memory      = {vm_data["memory"]}\n'
+            vms_config += f'    disksize    = {vm_data["disksize"]}\n'
+            vms_config += f'    guest_id    = "{vm_data["guest_id"]}"\n'
+            vms_config += "  }\n"
+        vms_config += "}\n"
         terraform_config += vms_config
 
         # Write to file
@@ -158,9 +148,10 @@ vms = {{
         for widget in self.dns_frame.winfo_children():
             if isinstance(widget, ttk.Entry):
                 widget.delete(0, tk.END)
-        for widget in self.vms_frame.winfo_children():
-            if isinstance(widget, ttk.Entry):
-                widget.delete(0, tk.END)
+        for vm_entry in self.vm_entries:
+            vm_entry.destroy()
+        self.vm_entries.clear()
+        self.add_vm_entry()
 
     def open_additional_window(self):
         new_window = tk.Toplevel(self.root)
@@ -173,14 +164,11 @@ vms = {{
         additional_config_label = ttk.Label(additional_frame, text="Additional Configuration")
         additional_config_label.grid(row=0, column=0, columnspan=2, pady=10)
 
-        self.datacenter_entry = self.create_labeled_entry(additional_frame, "Datacenter", 1, default="TU-Datacenter")
-        self.cluster_entry = self.create_labeled_entry(additional_frame, "Cluster", 2, default="Database Server B")
-        self.network_entry = self.create_labeled_entry(additional_frame, "Network", 3, default="VM Network")
-        self.datastore_entry = self.create_labeled_entry(additional_frame, "Datastore", 4, default="Database-Server-B-Datastore")
-        self.disksize_entry = self.create_labeled_entry(additional_frame, "Disk Size", 5, default="20")
-
-        next_button = ttk.Button(additional_frame, text="Next", command=self.open_iso_path_window)
-        next_button.grid(row=6, column=0, columnspan=2, pady=10)
+        self.datacenter_entry = create_labeled_entry(additional_frame, "Datacenter", 1)
+        self.cluster_entry = create_labeled_entry(additional_frame, "Cluster", 2)
+        self.network_entry = create_labeled_entry(additional_frame, "Network", 3)
+        self.datastore_entry = create_labeled_entry(additional_frame, "Datastore", 4)
+        self.disksize_entry = create_labeled_entry(additional_frame, "Disk Size", 5)
 
         submit_button = ttk.Button(additional_frame, text="Submit", command=self.generate_variables_tf)
         submit_button.grid(row=8, column=0, columnspan=2, pady=10)
@@ -198,13 +186,54 @@ vms = {{
         iso_label = ttk.Label(iso_frame, text="ISO Path Configuration")
         iso_label.grid(row=0, column=0, columnspan=2, pady=10)
 
-        self.iso_path_entry = self.create_labeled_entry(iso_frame, "ISO Path", 1, default="ISO/CentOS-7-x86_64-DVD-2009.iso")
+        self.iso_path_entry = create_labeled_entry(iso_frame, "ISO Path", 1)
 
         submit_button = ttk.Button(iso_frame, text="Submit", command=self.generate_main_tf)
         submit_button.grid(row=2, column=0, columnspan=2, pady=10)
 
         close_button = ttk.Button(iso_frame, text="Close", command=iso_window.destroy)
         close_button.grid(row=3, column=0, columnspan=2, pady=10)
+
+
+
+    def open_terraform_window(self):
+        terraform_window = tk.Toplevel(self.root)
+        terraform_window.title("Create Terraform Files")
+
+        terraform_frame = ttk.Frame(terraform_window, padding="10")
+        terraform_frame.pack(fill=tk.BOTH, expand=True)
+
+        terraform_label = ttk.Label(terraform_frame, text="Create Terraform Files")
+        terraform_label.grid(row=0, column=0, columnspan=2, pady=10)
+
+        init_button = ttk.Button(terraform_frame, text="Init", command=self.terraform_init)
+        init_button.grid(row=2, column=0, padx=5, pady=10)
+
+        plan_button = ttk.Button(terraform_frame, text="Plan", command=self.terraform_plan)
+        plan_button.grid(row=2, column=1, padx=5, pady=10)
+
+        apply_button = ttk.Button(terraform_frame, text="Apply", command=self.terraform_apply)
+        apply_button.grid(row=2, column=2, padx=5, pady=10)
+
+        close_button = ttk.Button(terraform_frame, text="Close", command=terraform_window.destroy)
+        close_button.grid(row=3, column=0, columnspan=3, pady=10)
+
+    def terraform_init(self):
+        self.run_terraform_command("terraform init")
+
+    def terraform_plan(self):
+        self.run_terraform_command("terraform plan")
+
+    def terraform_apply(self):
+        self.run_terraform_command("terraform apply -auto-approve")
+
+    def run_terraform_command(self, command):
+        try:
+            result = subprocess.run(command, check=True, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            messagebox.showinfo("Success", f"Command '{command}' executed successfully:\n{result.stdout}")
+        except subprocess.CalledProcessError as e:
+            messagebox.showerror("Error", f"Command '{command}' failed:\n{e.stderr}")
+
 
     def generate_variables_tf(self):
         variables_tf_content = f"""
