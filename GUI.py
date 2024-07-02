@@ -57,26 +57,16 @@ class ConfigApp:
         self.vms_frame.grid(row=3, column=0, padx=10, pady=10, sticky="ew")
 
         self.vm1_name = self.create_labeled_entry(self.vms_frame, "VM 1 Name", 0, default="VM-1")
-        self.vm1_ip = self.create_labeled_entry(self.vms_frame, "VM 1 IP", 1, default="172.25.204.49")
         self.vm1_cpu = self.create_labeled_entry(self.vms_frame, "VM 1 CPU", 2, default="2")
         self.vm1_memory = self.create_labeled_entry(self.vms_frame, "VM 1 Memory (MB)", 3, default="1024")
         self.vm1_disksize = self.create_labeled_entry(self.vms_frame, "VM 1 Disk Size (GB)", 4, default="40")
         self.vm1_guest_id = self.create_labeled_entry(self.vms_frame, "VM 1 Guest ID", 5, default="centos7_64Guest")
-        self.vm1_netmask = self.create_labeled_entry(self.vms_frame, "VM 1 IPv4 Netmask", 6, default="24")
-        self.vm1_gateway = self.create_labeled_entry(self.vms_frame, "VM 1 IPv4 Gateway", 7, default="172.25.204.1")
-        self.vm1_username = self.create_labeled_entry(self.vms_frame, "VM 1 Username", 8, default="kube-spray")
-        self.vm1_password = self.create_labeled_entry(self.vms_frame, "VM 1 Password", 9, default="12345", show="*")
 
         self.vm2_name = self.create_labeled_entry(self.vms_frame, "VM 2 Name", 10, default="VM-2")
-        self.vm2_ip = self.create_labeled_entry(self.vms_frame, "VM 2 IP", 11, default="172.25.204.50")
         self.vm2_cpu = self.create_labeled_entry(self.vms_frame, "VM 2 CPU", 12, default="2")
         self.vm2_memory = self.create_labeled_entry(self.vms_frame, "VM 2 Memory (MB)", 13, default="1024")
         self.vm2_disksize = self.create_labeled_entry(self.vms_frame, "VM 2 Disk Size (GB)", 14, default="40")
         self.vm2_guest_id = self.create_labeled_entry(self.vms_frame, "VM 2 Guest ID", 15, default="centos7_64Guest")
-        self.vm2_netmask = self.create_labeled_entry(self.vms_frame, "VM 2 IPv4 Netmask", 16, default="24")
-        self.vm2_gateway = self.create_labeled_entry(self.vms_frame, "VM 2 IPv4 Gateway", 17, default="172.25.204.1")
-        self.vm2_username = self.create_labeled_entry(self.vms_frame, "VM 2 Username", 18, default="kube-spray")
-        self.vm2_password = self.create_labeled_entry(self.vms_frame, "VM 2 Password", 19, default="12345", show="*")
 
         # Frame for actions
         self.action_frame = ttk.Frame(main_frame)
@@ -132,32 +122,21 @@ dns_suffix_list       = [ "{self.dns_suffix_list.get()}" ]
 
         # Generate VMs configuration
         vms_config = f"""
-disksize               = "{self.vm1_disksize.get()}"
 
 vms = {{
    "rocky_test_1"= {{
     name                = "{self.vm1_name.get()}"
-    vm_ip               = "{self.vm1_ip.get()}"
     cpu                 = {self.vm1_cpu.get()}
     memory              = {self.vm1_memory.get()}
     disksize            = {self.vm1_disksize.get()}
     guest_id            = "{self.vm1_guest_id.get()}"
-    ipv4_netmask        = {self.vm1_netmask.get()}
-    ipv4_gateway        = "{self.vm1_gateway.get()}"
-    username            = "{self.vm1_username.get()}"
-    password            = "{self.vm1_password.get()}"
   }}
    "rocky_test_2"= {{
     name                = "{self.vm2_name.get()}"
-    vm_ip               = "{self.vm2_ip.get()}"
     cpu                 = {self.vm2_cpu.get()}
     memory              = {self.vm2_memory.get()}
     disksize            = {self.vm2_disksize.get()}
     guest_id            = "{self.vm2_guest_id.get()}"
-    ipv4_netmask        = {self.vm2_netmask.get()}
-    ipv4_gateway        = "{self.vm2_gateway.get()}"
-    username            = "{self.vm2_username.get()}"
-    password            = "{self.vm2_password.get()}"
   }}
 }}
 """
@@ -312,62 +291,11 @@ variable "dns_suffix_list" {{
 variable "vms" {{
   type = map(object({{
     name       = string
-    vm_ip      = string
     cpu        = number
     memory     = number
     disksize   = number
     guest_id   = string
-    ipv4_netmask = number
-    ipv4_gateway = string
-    username    = string
-    password    = string
   }}))
-  default = {{
-    rocky_test_1 = {{
-      name       = "{self.vm1_name.get()}"
-      vm_ip      = "{self.vm1_ip.get()}"
-      cpu        = {self.vm1_cpu.get()}
-      memory     = {self.vm1_memory.get()}
-      disksize   = {self.vm1_disksize.get()}
-      guest_id   = "{self.vm1_guest_id.get()}"
-      ipv4_netmask = {self.vm1_netmask.get()}
-      ipv4_gateway = "{self.vm1_gateway.get()}"
-      username    = "{self.vm1_username.get()}"
-      password    = "{self.vm1_password.get()}"
-    }}
-    rocky_test_2 = {{
-      name       = "{self.vm2_name.get()}"
-      vm_ip      = "{self.vm2_ip.get()}"
-      cpu        = {self.vm2_cpu.get()}
-      memory     = {self.vm2_memory.get()}
-      disksize   = {self.vm2_disksize.get()}
-      guest_id   = "{self.vm2_guest_id.get()}"
-      ipv4_netmask = {self.vm2_netmask.get()}
-      ipv4_gateway = "{self.vm2_gateway.get()}"
-      username    = "{self.vm2_username.get()}"
-      password    = "{self.vm2_password.get()}"
-    }}
-  }}
-}}
-
-variable "vminfo" {{
-  type = map(object({{
-    vm     = string
-    cpu    = string
-    memory = string
-  }}))
-  default = {{
-    "rocky_test_1" = {{
-      vm     = "{self.vm1_name.get()}"
-      cpu    = "{self.vm1_cpu.get()}"
-      memory = "{self.vm1_memory.get()}"
-    }}
-    "rocky_test_2" = {{
-      vm = "{self.vm2_name.get()}"
-      cpu = "{self.vm2_cpu.get()}"
-      memory = "{self.vm2_memory.get()}"
-    }}
-  }}
 }}
 """
 
@@ -426,56 +354,7 @@ resource "vsphere_virtual_machine" "vm" {{
     path         = "{self.iso_path_entry.get()}"
   }}
 
-  extra_config = {{
-    "guestinfo.userdata" = <<EOF
-#cloud-config
-users:
-  - default
-  - name: ${{values(var.vms)[count.index].username}}
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    groups: users, admin
-    home: /home/${{values(var.vms)[count.index].username}}
-    shell: /bin/bash
-    lock_passwd: false
-    passwd: ${{values(var.vms)[count.index].password}}
-
-network:
-  version: 2
-  ethernets:
-    eth0:
-      addresses:
-        - ${{values(var.vms)[count.index].vm_ip}}/${{values(var.vms)[count.index].ipv4_netmask}}
-      gateway4: ${{values(var.vms)[count.index].ipv4_gateway}}
-      nameservers:
-        addresses: ${{jsonencode(var.dns_server_list)}}
-        search: ${{jsonencode(var.dns_suffix_list)}}
-EOF
-  }}
-
-  wait_for_guest_net_timeout = 120
-
-  provisioner "remote-exec" {{
-    inline = [
-      "echo -e '${{values(var.vms)[count.index].password}}${{values(var.vms)[count.index].password}}' | passwd ${{values(var.vms)[count.index].username}}"
-    ]
-
-    connection {{
-      type     = "ssh"
-      user     = "root"
-      password = "12345"  # Replace with the actual root password or another initial password
-      host     = values(var.vms)[count.index].vm_ip
-    }}
-  }}
 }}
-
-output "vm_ips" {{
-  value = {{ for k, v in var.vms : k => v.vm_ip }}
-}}
-
-output "vm_names" {{
-  value = {{ for k, v in var.vms : k => v.name }}
-}}
-
 """
 
         # Write to main.tf file
