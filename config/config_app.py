@@ -128,6 +128,10 @@ dns_suffix_list       = [ "{self.dns_suffix_list.get()}" ]
             vms_config += f'    memory      = {vm_data["memory"]}\n'
             vms_config += f'    disksize    = {vm_data["disksize"]}\n'
             vms_config += f'    guest_id    = "{vm_data["guest_id"]}"\n'
+            vms_config += f'    cpu_hot_add_enabled  = {vm_data["cpu_hot_add_enabled"]}\n'
+            vms_config += f'    memory_hot_add_enabled = {vm_data["memory_hot_add_enabled"]}\n'
+            vms_config += f'    eagerly_scrub = {vm_data["eagerly_scrub"]}\n'
+            vms_config += f'    thin_provisioned = {vm_data["thin_provisioned"]}\n'
             vms_config += "  }\n"
         vms_config += "}\n"
         terraform_config += vms_config
@@ -334,6 +338,8 @@ variable "vms" {{
             messagebox.showinfo("Info", "Terraform variables configuration generated to variable.tf")
 
     def generate_main_tf(self):
+        vms_data = [entry.get_vm_data() for entry in self.vm_entries]
+
         main_tf_content = f"""
 data "vsphere_datacenter" "dc" {{
   name = var.datacenter
@@ -363,8 +369,8 @@ resource "vsphere_virtual_machine" "vm" {{
   num_cpus             = values(var.vms)[count.index].cpu
   memory               = values(var.vms)[count.index].memory
   guest_id             = values(var.vms)[count.index].guest_id
-  cpu_hot_add_enabled  = true
-  memory_hot_add_enabled = true
+  cpu_hot_add_enabled  = values(var.vms)[count.index].cpu_hot_add_enabled
+  memory_hot_add_enabled = values(var.vms)[count.index].memory_hot_add_enabled
 
   network_interface {{
     network_id   = data.vsphere_network.network.id
@@ -374,23 +380,38 @@ resource "vsphere_virtual_machine" "vm" {{
   disk {{
     label            = "disk0"
     size             = values(var.vms)[count.index].disksize
-    eagerly_scrub    = false
-    thin_provisioned = false
+    eagerly_scrub    = values(var.vms)[count.index].disk_provisioning
+    thin_provisioned = values(var.vms)[count.index].disk_provisioning
   }}
   
   cdrom {{
     datastore_id = data.vsphere_datastore.datastore.id
     path         = "{self.iso_path_entry.get()}"
   }}
-
 }}
 """
 
-        # Write to main.tf file
         with open("main.tf", "w") as f:
             f.write(main_tf_content)
 
-        messagebox.showinfo("Info", "Terraform variables configuration generated to main.tf")
+        messagebox.showinfo("Info", "Terraform configuration generated to main.tf")
+
+    def get_eagerly_scrub(self, disk_provisioning):
+        eagerly_scrub_map = {
+            "Thick Provision Lazy Zeroed": "false",
+            "Thick Provision Eager Zeroed": "true",
+            "Thin Provision": "false"
+        }
+        return eagerly_scrub_map.get(disk_provisioning, "false")
+
+    def get_thin_provisioned(self, disk_provisioning):
+        thin_provisioned_map = {
+            "Thick Provision Lazy Zeroed": "false",
+            "Thick Provision Eager Zeroed": "false",
+            "Thin Provision": "true"
+        }
+        return thin_provisioned_map.get(disk_provisioning, "true")
+
 
 if __name__ == "__main__":
     root = tk.Tk()
