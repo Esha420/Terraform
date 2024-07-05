@@ -119,6 +119,7 @@ dns_suffix_list       = [ "{self.dns_suffix_list.get()}" ]
         terraform_config += dns_config
 
         # Generate VMs configuration
+        
         vms_config = "\nvms = {\n"
         for i, vm_entry in enumerate(self.vm_entries):
             vm_data = vm_entry.get_vm_data()
@@ -128,10 +129,12 @@ dns_suffix_list       = [ "{self.dns_suffix_list.get()}" ]
             vms_config += f'    memory      = {vm_data["memory"]}\n'
             vms_config += f'    disksize    = {vm_data["disksize"]}\n'
             vms_config += f'    guest_id    = "{vm_data["guest_id"]}"\n'
-            vms_config += f'    cpu_hot_add_enabled  = {vm_data["cpu_hot_add_enabled"]}\n'
-            vms_config += f'    memory_hot_add_enabled = {vm_data["memory_hot_add_enabled"]}\n'
-            vms_config += f'    eagerly_scrub = {vm_data["eagerly_scrub"]}\n'
-            vms_config += f'    thin_provisioned = {vm_data["thin_provisioned"]}\n'
+            
+            vms_config += f'    cpu_hot_add_enabled  = {self.get_boolean_value(vm_data["cpu_hot_add_enabled"])}\n'
+            vms_config += f'    memory_hot_add_enabled = {self.get_boolean_value(vm_data["memory_hot_add_enabled"])}\n'
+            
+            vms_config += f'    eagerly_scrub = {self.get_eagerly_scrub(vm_data["disk_provisioning"])}\n'
+            vms_config += f'    thin_provisioned = {self.get_thin_provisioned(vm_data["disk_provisioning"])}\n'
             vms_config += "  }\n"
         vms_config += "}\n"
         terraform_config += vms_config
@@ -262,11 +265,12 @@ variable "datacenter" {{
   default     = "{self.datacenter_entry.get()}"
 }}
 
-variable "cluster" {{
-  description = "Cluster name"
+variable "standalone_host" {{
+  description = "Host name"
   type        = string
   default     = "{self.cluster_entry.get()}"
 }}
+
 
 variable "network" {{
   description = "Network name for the VM"
@@ -328,6 +332,9 @@ variable "vms" {{
     memory     = number
     disksize   = number
     guest_id   = string
+    cpu_hot_add_enabled   = bool
+    memory_hot_add_enabled = bool
+    disk_provisioning     = string
   }}))
 }}
 """
@@ -336,9 +343,50 @@ variable "vms" {{
         with open("variable.tf", "w") as f:
             f.write(variables_tf_content)
             messagebox.showinfo("Info", "Terraform variables configuration generated to variable.tf")
+    def get_boolean_value(self, boolean_var):
+        return "true" if boolean_var.get() else "false"
+
+    def get_eagerly_scrub(self, disk_provisioning):
+        if disk_provisioning.lower() == "thick provision lazy zeroed":
+            return "false"
+        elif disk_provisioning.lower() == "thick provision eager zeroed":
+            return "true"
+        elif disk_provisioning.lower() == "thin provision":
+            return "false"
+        else:
+            # Handle other cases or raise an error if needed
+            return "false"  # Default to false if input doesn't match expected values
+
+    def get_thin_provisioned(self, disk_provisioning):
+        if disk_provisioning.lower() == "thick provision lazy zeroed":
+            return "false"
+        elif disk_provisioning.lower() == "thick provision eager zeroed":
+            return "false"
+        elif disk_provisioning.lower() == "thin provision":
+            return "true"
+        else:
+            # Handle other cases or raise an error if needed
+            return "false"  # Default to false if input doesn't match expected values
 
     def generate_main_tf(self):
         vms_data = [entry.get_vm_data() for entry in self.vm_entries]
+        
+        vms_tf_data = [
+        f"""
+        {{
+            name = "{vm['name']}",
+            cpu = {vm['cpu']},
+            memory = {vm['memory']},
+            disksize = {vm['disksize']},
+            guest_id = "{vm['guest_id']}",
+            cpu_hot_add_enabled = {vm['cpu_hot_add_enabled']},
+            memory_hot_add_enabled = {vm['memory_hot_add_enabled']},
+            eagerly_scrub = {vm['eagerly_scrub']},
+            thin_provisioned = {vm['thin_provisioned']}
+        }}
+        """
+        for vm in vms_data
+    ]
 
         main_tf_content = f"""
 data "vsphere_datacenter" "dc" {{
@@ -350,8 +398,8 @@ data "vsphere_datastore" "datastore" {{
   datacenter_id = data.vsphere_datacenter.dc.id
 }}
 
-data "vsphere_compute_cluster" "cluster" {{
-  name          = var.cluster
+data "vsphere_host" "standalone_host" {{
+  name          = var.standalone_host
   datacenter_id = data.vsphere_datacenter.dc.id
 }}
 
@@ -363,14 +411,14 @@ data "vsphere_network" "network" {{
 resource "vsphere_virtual_machine" "vm" {{
   count            = length(var.vms)
   name             = values(var.vms)[count.index].name
-  resource_pool_id = data.vsphere_compute_cluster.cluster.resource_pool_id
+  resource_pool_id = data.vsphere_host.standalone_host.resource_pool_id
   datastore_id     = data.vsphere_datastore.datastore.id
 
   num_cpus             = values(var.vms)[count.index].cpu
   memory               = values(var.vms)[count.index].memory
   guest_id             = values(var.vms)[count.index].guest_id
-  cpu_hot_add_enabled  = values(var.vms)[count.index].cpu_hot_add_enabled
-  memory_hot_add_enabled = values(var.vms)[count.index].memory_hot_add_enabled
+  cpu_hot_add_enabled  = {self.get_boolean_value("values(var.vms)[count.index].cpu_hot_add_enabled")}
+  memory_hot_add_enabled = {self.get_boolean_value("values(var.vms)[count.index].memory_hot_add_enabled")}
 
   network_interface {{
     network_id   = data.vsphere_network.network.id
@@ -380,8 +428,8 @@ resource "vsphere_virtual_machine" "vm" {{
   disk {{
     label            = "disk0"
     size             = values(var.vms)[count.index].disksize
-    eagerly_scrub    = values(var.vms)[count.index].disk_provisioning
-    thin_provisioned = values(var.vms)[count.index].disk_provisioning
+    eagerly_scrub    = {self.get_eagerly_scrub("values(var.vms)[count.index].disk_provisioning")}
+    thin_provisioned = {self.get_thin_provisioned("values(var.vms)[count.index].disk_provisioning")}
   }}
   
   cdrom {{

@@ -18,6 +18,7 @@ class VMEntry(ttk.Frame):
         self.memory_hot_add_enabled_check.grid(row=4, column=1, sticky="w")
         self.disksize = self.create_labeled_entry("Disk Size", 5)
         self.disk_provisioning = tk.StringVar()
+        
         self.disk_provisioning_menu = ttk.OptionMenu(
             self, self.disk_provisioning,
             "Thin Provision",
@@ -51,26 +52,28 @@ class VMEntry(ttk.Frame):
         self.grid(row=new_entry_number, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
 
     def get_vm_data(self):
-        disk_provisioning = self.disk_provisioning.get()
-        if disk_provisioning == "Thick Provision Lazy Zeroed":
+        # Disk provisioning values
+        if self.disk_provisioning.get() == "Thick Provision Lazy Zeroed":
             eagerly_scrub = "false"
             thin_provisioned = "false"
-        elif disk_provisioning == "Thick Provision Eager Zeroed":
+        elif self.disk_provisioning.get() == "Thick Provision Eager Zeroed":
             eagerly_scrub = "true"
             thin_provisioned = "false"
-        elif disk_provisioning == "Thin Provision":
+        elif self.disk_provisioning.get() == "Thin Provision":
             eagerly_scrub = "false"
             thin_provisioned = "true"
-        
+        else:
+            eagerly_scrub = "false"
+            thin_provisioned = "false"  # Default values if none of the options match
+
         return {
             "name": self.name.get(),
-            "cpu": int(self.cpu.get()),
-            "memory": int(self.memory.get()),
-            "disksize": int(self.disksize.get()),
+            "cpu": self.cpu.get(),
+            "memory": self.memory.get(),
+            "disksize": self.disksize.get(),
             "guest_id": self.guest_id.get(),
-            "cpu_hot_add_enabled": "true" if self.cpu_hot_add_enabled.get() else "false",
-            "memory_hot_add_enabled": "true" if self.memory_hot_add_enabled.get() else "false",
-            "disk_provisioning": disk_provisioning,
+            "cpu_hot_add_enabled": str(self.cpu_hot_add_enabled.get()).lower(),
+            "memory_hot_add_enabled": str(self.memory_hot_add_enabled.get()).lower(),
             "eagerly_scrub": eagerly_scrub,
             "thin_provisioned": thin_provisioned
         }
