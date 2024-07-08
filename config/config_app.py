@@ -1,9 +1,9 @@
 import tkinter as tk
 import subprocess
 from tkinter import ttk, messagebox
-from config.vm_entry import VMEntry
-from config.utils import create_labeled_entry
-from config.gui_utils import create_scrollable_frame
+from config.vm_entry import VMEntry  # Ensure this module is correctly implemented and available
+from config.utils import create_labeled_entry  # Ensure this module is correctly implemented and available
+from config.gui_utils import create_scrollable_frame  # Ensure this module is correctly implemented and available
 
 class ConfigApp:
     def __init__(self, root):
@@ -132,7 +132,7 @@ dns_suffix_list       = [ "{self.dns_suffix_list.get()}" ]
             
             vms_config += f'    cpu_hot_add_enabled  = {self.get_boolean_value(vm_data["cpu_hot_add_enabled"])}\n'
             vms_config += f'    memory_hot_add_enabled = {self.get_boolean_value(vm_data["memory_hot_add_enabled"])}\n'
-            
+            vms_config += f'    disk_provisioning = "{vm_data["disk_provisioning"]}"\n'
             vms_config += f'    eagerly_scrub = {self.get_eagerly_scrub(vm_data["disk_provisioning"])}\n'
             vms_config += f'    thin_provisioned = {self.get_thin_provisioned(vm_data["disk_provisioning"])}\n'
             vms_config += "  }\n"
@@ -172,7 +172,7 @@ dns_suffix_list       = [ "{self.dns_suffix_list.get()}" ]
         additional_config_label.grid(row=0, column=0, columnspan=2, pady=10)
 
         self.datacenter_entry = create_labeled_entry(additional_frame, "Datacenter", 1)
-        self.cluster_entry = create_labeled_entry(additional_frame, "Cluster", 2)
+        self.cluster_entry = create_labeled_entry(additional_frame, "Host", 2)
         self.network_entry = create_labeled_entry(additional_frame, "Network", 3)
         self.datastore_entry = create_labeled_entry(additional_frame, "Datastore", 4)
         self.disksize_entry = create_labeled_entry(additional_frame, "Disk Size", 5)
@@ -200,8 +200,6 @@ dns_suffix_list       = [ "{self.dns_suffix_list.get()}" ]
 
         close_button = ttk.Button(iso_frame, text="Close", command=iso_window.destroy)
         close_button.grid(row=3, column=0, columnspan=2, pady=10)
-
-
 
     def open_terraform_window(self):
         terraform_window = tk.Toplevel(self.root)
@@ -240,7 +238,6 @@ dns_suffix_list       = [ "{self.dns_suffix_list.get()}" ]
             messagebox.showinfo("Success", f"Command '{command}' executed successfully:\n{result.stdout}")
         except subprocess.CalledProcessError as e:
             messagebox.showerror("Error", f"Command '{command}' failed:\n{e.stderr}")
-
 
     def generate_variables_tf(self):
         variables_tf_content = f"""
@@ -335,6 +332,8 @@ variable "vms" {{
     cpu_hot_add_enabled   = bool
     memory_hot_add_enabled = bool
     disk_provisioning     = string
+    eagerly_scrub          = bool
+    thin_provisioned       = bool
   }}))
 }}
 """
@@ -343,51 +342,8 @@ variable "vms" {{
         with open("variable.tf", "w") as f:
             f.write(variables_tf_content)
             messagebox.showinfo("Info", "Terraform variables configuration generated to variable.tf")
-    def get_boolean_value(self, boolean_var):
-        return "true" if boolean_var.get() else "false"
-
-    def get_eagerly_scrub(self, disk_provisioning):
-        if disk_provisioning.lower() == "thick provision lazy zeroed":
-            return "false"
-        elif disk_provisioning.lower() == "thick provision eager zeroed":
-            return "true"
-        elif disk_provisioning.lower() == "thin provision":
-            return "false"
-        else:
-            # Handle other cases or raise an error if needed
-            return "false"  # Default to false if input doesn't match expected values
-
-    def get_thin_provisioned(self, disk_provisioning):
-        if disk_provisioning.lower() == "thick provision lazy zeroed":
-            return "false"
-        elif disk_provisioning.lower() == "thick provision eager zeroed":
-            return "false"
-        elif disk_provisioning.lower() == "thin provision":
-            return "true"
-        else:
-            # Handle other cases or raise an error if needed
-            return "false"  # Default to false if input doesn't match expected values
 
     def generate_main_tf(self):
-        vms_data = [entry.get_vm_data() for entry in self.vm_entries]
-        
-        vms_tf_data = [
-        f"""
-        {{
-            name = "{vm['name']}",
-            cpu = {vm['cpu']},
-            memory = {vm['memory']},
-            disksize = {vm['disksize']},
-            guest_id = "{vm['guest_id']}",
-            cpu_hot_add_enabled = {vm['cpu_hot_add_enabled']},
-            memory_hot_add_enabled = {vm['memory_hot_add_enabled']},
-            eagerly_scrub = {vm['eagerly_scrub']},
-            thin_provisioned = {vm['thin_provisioned']}
-        }}
-        """
-        for vm in vms_data
-    ]
-
         main_tf_content = f"""
 data "vsphere_datacenter" "dc" {{
   name = var.datacenter
@@ -417,8 +373,9 @@ resource "vsphere_virtual_machine" "vm" {{
   num_cpus             = values(var.vms)[count.index].cpu
   memory               = values(var.vms)[count.index].memory
   guest_id             = values(var.vms)[count.index].guest_id
-  cpu_hot_add_enabled  = {self.get_boolean_value("values(var.vms)[count.index].cpu_hot_add_enabled")}
-  memory_hot_add_enabled = {self.get_boolean_value("values(var.vms)[count.index].memory_hot_add_enabled")}
+  cpu_hot_add_enabled  = values(var.vms)[count.index].cpu_hot_add_enabled
+  memory_hot_add_enabled = values(var.vms)[count.index].memory_hot_add_enabled
+
 
   network_interface {{
     network_id   = data.vsphere_network.network.id
@@ -428,8 +385,8 @@ resource "vsphere_virtual_machine" "vm" {{
   disk {{
     label            = "disk0"
     size             = values(var.vms)[count.index].disksize
-    eagerly_scrub    = {self.get_eagerly_scrub("values(var.vms)[count.index].disk_provisioning")}
-    thin_provisioned = {self.get_thin_provisioned("values(var.vms)[count.index].disk_provisioning")}
+    eagerly_scrub    = values(var.vms)[count.index].eagerly_scrub
+    thin_provisioned = values(var.vms)[count.index].thin_provisioned
   }}
   
   cdrom {{
@@ -444,13 +401,24 @@ resource "vsphere_virtual_machine" "vm" {{
 
         messagebox.showinfo("Info", "Terraform configuration generated to main.tf")
 
+    def get_boolean_value(self, value):
+        if isinstance(value, bool):
+            return str(value).lower()
+        if value.lower() in ['true', 'yes', '1']:
+            return 'true'
+        if value.lower() in ['false', 'no', '0']:
+            return 'false'
+        raise ValueError(f"Invalid boolean value: {value}")
+
     def get_eagerly_scrub(self, disk_provisioning):
         eagerly_scrub_map = {
             "Thick Provision Lazy Zeroed": "false",
             "Thick Provision Eager Zeroed": "true",
             "Thin Provision": "false"
         }
-        return eagerly_scrub_map.get(disk_provisioning, "false")
+        eagerly_scrub_value = eagerly_scrub_map.get(disk_provisioning, "false")
+        print(f"Disk Provisioning: {disk_provisioning}, Eagerly Scrub: {eagerly_scrub_value}")
+        return eagerly_scrub_value
 
     def get_thin_provisioned(self, disk_provisioning):
         thin_provisioned_map = {
@@ -458,8 +426,9 @@ resource "vsphere_virtual_machine" "vm" {{
             "Thick Provision Eager Zeroed": "false",
             "Thin Provision": "true"
         }
-        return thin_provisioned_map.get(disk_provisioning, "true")
-
+        thin_provisioned_value = thin_provisioned_map.get(disk_provisioning, "true")
+        print(f"Disk Provisioning: {disk_provisioning}, Thin Provisioned: {thin_provisioned_value}")
+        return thin_provisioned_value
 
 if __name__ == "__main__":
     root = tk.Tk()
